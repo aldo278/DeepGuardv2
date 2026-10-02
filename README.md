@@ -16,4 +16,6 @@ I will be giving updates on my progress in this file, and will be adding new sec
 ## Detector
 Before using a model, I decided to first check if The given image contains a hidden watermark, as this would be a good indicator of whether the image is real or fake.
 
-- watermark.py was originally named data.py but i decided to use the same file to detect a watermark
+watermark.py was originally named data.py but i decided to use the same file to detect a watermark
+
+The training data images are too small thus the watermark detector library cannot make out the image, let alone check for a hidden watermark. Skip this for now, I will try to add a loop where i give a UI fake images and annotate them myself. Moving on to Logistic regression...
