@@ -11,3 +11,9 @@ The last version used an API that i tweaked so that it took 5 frames from a vide
 I will be giving updates on my progress in this file, and will be adding new sections as I go along. Newest updates will be at the top.
 
 ---------------------------------------------------------------------------------
+
+
+## Detector
+Before using a model, I decided to first check if The given image contains a hidden watermark, as this would be a good indicator of whether the image is real or fake.
+
+- watermark.py was originally named data.py but i decided to use the same file to detect a watermark
