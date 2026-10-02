@@ -19,3 +19,8 @@ Before using a model, I decided to first check if The given image contains a hid
 watermark.py was originally named data.py but i decided to use the same file to detect a watermark
 
 The training data images are too small thus the watermark detector library cannot make out the image, let alone check for a hidden watermark. Skip this for now, I will try to add a loop where i give a UI fake images and annotate them myself. Moving on to Logistic regression...
+
+
+### Logistic Regression
+The current model has a 68% accuracy, its okay for being the first take but not ready as MVP. 
+Another thing to note is that the script logisticRegression.py takes around 5 min to run and return results, it might be because of the large size of the dataset.
