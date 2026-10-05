@@ -24,3 +24,11 @@ The training data images are too small thus the watermark detector library canno
 ### Logistic Regression
 The current model has a 68% accuracy, its okay for being the first take but not ready as MVP. 
 Another thing to note is that the script logisticRegression.py takes around 5 min to run and return results, it might be because of the large size of the dataset.
+
+
+### Convolutional Neural Network (CNN)
+I will try to implement a CNN model with the current dataset, and see if it can achieve a higher accuracy.
+If it fails, I will try to get my own data. Either way making my own dataset with current images would help not only on accuracy but also on the watermark detection.
+
+
+I did some research and found that CNNs are implement with either TensorFlow or PyTorch. I will try to use TensorFlow first, as it is more beginner-friendly.
