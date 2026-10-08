@@ -32,3 +32,8 @@ If it fails, I will try to get my own data. Either way making my own dataset wit
 
 
 I did some research and found that CNNs are implement with either TensorFlow or PyTorch. I will try to use TensorFlow first, as it is more beginner-friendly.
+
+Definitions:
+Tensor: a tensor is a container for numbers arranged along some number of dimensions. It is the basic data structure in TensorFlow, and its essentially the same idea as a numpy array.
+with extra features for running on GPU's and tracking gradients.
+
