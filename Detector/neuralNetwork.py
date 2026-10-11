@@ -40,14 +40,48 @@ for i in range(25):
 # The convolutional base is the first part of a CNN: the stack of Conv2D and MaxPooling2D layers
 # that extract features from the image, not a special keras object, just a name for that section of the model
 
+#first we create an emty model where layers are stack in a straight line, with each layer's output feeding into the next
+# Sequential works when the data flows throu one path with not branches
 model = models.Sequential()
+
+# here we add a 2d convolutional layer: it slides small filters acroos an image to detect patterns, it is the core building block of a CNN
+# we specify the number of filters (32), their size (3x3), and the activation function (relu), input shape is the heigh, width, channels of one image (RGB) only needed in the first layer
 model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)))
+# here we add another layer that downsamples. it slides a 2x2 window over each feature map, moving two pixels at a time so there is no overlap
+# and takes the maximum value in that window, reducing the spatial dimensions by half
 model.add(layers.MaxPooling2D((2, 2)))
+
+# another layer with more filters shrinks the image further while extracting more complex patterns
 model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+
+# 13x13 becomes a 6x6 
 model.add(layers.MaxPooling2D((2, 2)))
+
+# another layer with more filters 
 model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+
+
+# The output of every Con2D and MaxPooling2D layer is a 3D tensor of shape (height, width, channels). The width and height dimensions tend to shrink as we go deeper in the network
+# The number of output channels for each Conv2D layer is controlled by the firs argument. Typically, as the width and height shrink, you can afford (computationally) 
+# to add more output channels in each Conv2D layer
+
+# now we can add Dense layers on top
+# To complete the model, we can feed the last output tensor from the convolutiona base (of shape(4, 4 64) (shown in summary) into one or more
+# Dense layers to perform classification. Dense layers take vectors as input (which are 1D), while the current output is a 3D tensor.
+# First we need to flatten (or unrol) the 3D output to 1Dm then add one or more Dense layers on top. CIFAR has 10 classes, so we can use a final Dense Layer with 10 outputs
+
+# dense layers expect a flat list of numbers, but the base outputs a 3D tensor of shape (4, 4, 64)
+# Flatten unrolls it into one long vector of 1024 elements (4 * 4 * 64 = 1024)
+model.add(layers.Flatten())
+
+# a Dense layer (also called a fully connected layer) is where every input connects to every neuron. Each of the 64 neurons computes a weighted sum of all 1024 inputs, adds a bias
+# then applies the ReLU activation function
+model.add(layers.Dense(64, activation='relu'))
+
+# the output layer. Has 10 neurons, one for each class
+model.add(layers.Dense(10))
 
 model.summary()
 
-
+#
 

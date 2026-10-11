@@ -24,6 +24,7 @@ The training data images are too small thus the watermark detector library canno
 ### Logistic Regression
 The current model has a 68% accuracy, its okay for being the first take but not ready as MVP. 
 Another thing to note is that the script logisticRegression.py takes around 5 min to run and return results, it might be because of the large size of the dataset.
+Sigmoid function: activation function that squashes the output between 0 and 1, making it suitable for binary classification.
 
 
 ### Convolutional Neural Network (CNN)
@@ -35,5 +36,21 @@ I did some research and found that CNNs are implement with either TensorFlow or 
 
 Definitions:
 Tensor: a tensor is a container for numbers arranged along some number of dimensions. It is the basic data structure in TensorFlow, and its essentially the same idea as a numpy array.
-with extra features for running on GPU's and tracking gradients.
+with extra features for running on GPU's and tracking gradients. So a 3d matrix would be a 3d tensor.
+
+Convolution: a mathematical operation that slides a small grid of numbers, called a kernel (or filter), over an input array (such as an image or time-series data) to 
+extract local patterns and spatial relationships.
+What the convolution does, step by step:
+- take a small filter (a grid of weights, here 3x3)
+- place it over a 3x3 patch of the image
+- multiply each weight by the pixel under it, then add everything up, that gives one number
+- slide the filter over and repeat, across the whole image.
+The numbers collected from all positions form one feature map: a new image showing where that filter pattern was found
+
+
+Convolutional Base: The first part of a CNN, which is a stack of Conv2D and MaxPooling2D layers that extract features from the image. In this project it can find differences between neighboring pixels. (face isolation is a separate step). Some features include edges, gradients, color contrasts, and simple textures, middle layers can detect more complex patterns like corners, repeated patterns, skin, or fur or fabric textures. Deeper layers get larger, task specific features like facial features, objects, or text.
+
+Rectified Linear Unit (ReLU): an activation function in neural networks that outputs the input directly if it is positve, and outputs zero if the input is negative or zero
+In a Con2D layer, this is applied to every value in every feature map, right after the filter's weighted sum. It is an activation function that introduces non-linearity into the model, allowing it to learn more complex patterns. Kind of like the sigmoid function.
+
 
