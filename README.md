@@ -53,4 +53,8 @@ Convolutional Base: The first part of a CNN, which is a stack of Conv2D and MaxP
 Rectified Linear Unit (ReLU): an activation function in neural networks that outputs the input directly if it is positve, and outputs zero if the input is negative or zero
 In a Con2D layer, this is applied to every value in every feature map, right after the filter's weighted sum. It is an activation function that introduces non-linearity into the model, allowing it to learn more complex patterns. Kind of like the sigmoid function.
 
+For the CNN, there are algorithms that help in adjust weights to minimize error.
+- Adam optimizer: a popular optimization algorithm that adapts the learning rate for each parameter based on estimates of the first and second moments of the gradients
+- sgd (stochastic gradient descent): uses one fixed step size for everything, whereas Adam's default learning rate is much smaller (0.001)
+
 

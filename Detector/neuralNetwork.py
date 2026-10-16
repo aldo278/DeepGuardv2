@@ -33,9 +33,10 @@ for i in range(25):
     # which is why you need an extra index
     plt.imshow(train_images[i])
     plt.xlabel(class_names[train_labels[i][0]])
-# plt.show()
+plt.show()
 
 
+import tensorflow as tf
 # now we create a convolutional base:
 # The convolutional base is the first part of a CNN: the stack of Conv2D and MaxPooling2D layers
 # that extract features from the image, not a special keras object, just a name for that section of the model
@@ -83,5 +84,25 @@ model.add(layers.Dense(10))
 
 model.summary()
 
-#
+
+
+# now we can compile and train the model
+
+# we define the model but it has random weights and doesn't know how to learn yet, so we need to compile it to set up the learning rules
+model.compile(optimizer='adam',  
+# optimizer = adam (adaptive moment estimation) is the algorithm that adjusts the weights, after each batch, it works out which direction to nudge 
+# each weight to reduce the error using gradients, then nudges it.
+
+# loss is the score the model is trying to minimize., a number measuring how wrong the predictions are 
+# cross entropy punishes the model based on the probability it gave to the correct class, where confidently wrong answers get hit harder
+# categorical means there are multiple classes, and sparse means the labels are plain integers, which matches train_labels that holds values from 0-9
+# the param from_logits=True means the model outputs raw numbers (logits) before applying softmax, which is more numerically stable
+            loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+
+# metrics is what gets reported during training: the percentage of images classified correctly
+            metrics=['accuracy'])
+
+
+history = model.fit(train_images, train_labels, epochs=10,
+                    validation_data=(test_images, test_labels))
 
