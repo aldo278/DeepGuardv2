@@ -58,3 +58,7 @@ For the CNN, there are algorithms that help in adjust weights to minimize error.
 - sgd (stochastic gradient descent): uses one fixed step size for everything, whereas Adam's default learning rate is much smaller (0.001)
 
 
+will it differeciate between CGI and AI?
+check if too smooth or too irregular for CGI
+sobel operators
+https://en.wikipedia.org/wiki/Sobel_operator
