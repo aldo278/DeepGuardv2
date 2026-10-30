@@ -124,8 +124,8 @@ print(f"train: {X_train.shape}, test: {X_test.shape}", flush=True)
 # different scales, so StandardScaler gives every feature mean 0 / std 1 first.
 # inside the pipeline the scaler only learns its mean/std from the training data.
 model = make_pipeline(
-    StandardScaler(),
-    SGDClassifier(loss="log_loss", max_iter=1000, tol=1e-5, alpha=1e-5, average=True, random_state=42),
+    StandardScaler(),              # replaced from 1000   
+    SGDClassifier(loss="log_loss", max_iter=500, tol=1e-3, alpha=1e-5, average=True, random_state=42),
 )
 
 # training runs in two stages through the pipeline: standard scaler computes the mean and sd of each of the 4096 columns on the training data, and transforms the training data with them
@@ -134,6 +134,22 @@ model.fit(X_train, y_train)
 # scakes the test data using the training set's mean and sd, then the classifier makes a call per image. Internally it computes the probability of fake and thresholds it at .5
 # giving it at .5 or 1
 preds = model.predict(X_test)
-print(f"accuracy: {accuracy_score(y_test, preds):.4f}")
-print(confusion_matrix(y_test, preds))
-print(classification_report(y_test, preds, target_names=["REAL", "FAKE"]))
+# print(f"accuracy: {accuracy_score(y_test, preds):.4f}")
+# print(confusion_matrix(y_test, preds))
+# print(classification_report(y_test, preds, target_names=["REAL", "FAKE"]))
+
+
+# function from claude. to test if it returns a result
+def predict_one(path):
+    img = cv2.imread(str(path))
+    img = cv2.resize(img, (32, 32), interpolation=cv2.INTER_AREA)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    spectrum = np.log1p(np.abs(np.fft.fftshift(np.fft.fft2(gray))))
+    x = np.hstack([img.flatten(), spectrum.flatten()]).astype(np.float32)
+    return model.predict_proba(x.reshape(1, -1))[0, 1]  # probability of fake
+
+# real image
+print(f'Real Image, probability that is fake: {predict_one("Z:\\Capstone\\DeepGuardv2\\Detector\\TestImages\\ac2b4c7e-2f69-4b49-96a1-28be8ea39a4e.jpg")}')
+
+# fake image of damian :)
+print(f'Probability of Damian fake image: {predict_one("Z:\\Capstone\\DeepGuardv2\\Detector\\TestImages\\cd9f9a60-d135-4a96-9d9f-4c59d4dde0f9.png")}')
