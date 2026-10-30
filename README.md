@@ -69,3 +69,6 @@ An Epoch is one full pass through the entire training set. With 50,000 training 
 Why more than one pass? A single look at the data isn't enough for the weights to settle on good values. Each pass improves them a bit more, like re-reading a textbook chapter several times. Too many epochs, though, ans the model starts memorizing the training images instead of learning general patterns (overfitting), which is exactly what the plot helps spot.
 
 ![logo](https://365datascience.com/resources/blog/thumb@1024_bpm7kc63z8-overfitting-vs-underfitting-models-examples.webp)
+
+### Claude
+I will be using Claude Code to go over my implementations, it will mainly be used as another engineer to double check my work.
