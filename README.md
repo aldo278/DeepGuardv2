@@ -22,9 +22,20 @@ The training data images are too small thus the watermark detector library canno
 
 
 ### Logistic Regression
-The current model has a 68% accuracy, its okay for being the first take but not ready as MVP. 
+The current model started with a 68% accuracy, its okay for being the first take but not ready as MVP. 
 Another thing to note is that the script logisticRegression.py takes around 5 min to run and return results, it might be because of the large size of the dataset.
 Sigmoid function: activation function that squashes the output between 0 and 1, making it suitable for binary classification.
+
+More changes to this model. 
+
+FFT: Fast Fourier Transformer: an efficient algorithm for computien the Fourier Transform, which takes a signal and tells you which frequencies (wave patterns) its made of and how strong each one is. For example, when someone plays a piano chord, the sound is a combined wave, your ear can still pickup on individual notes. The Forier Transform does that mathematically: give it a combined wave and it separates out pure sine waves that add up to it, along with how loud each one is.
+Image Application.
+An image is 2D signal, so you use the 2D version (fft2). Here, 'frequency' means how quickly brightness changes as you move across the image:
+- Low frequencies: gradual changes, like a smooth sky, blurry gradient, or the overall shape and lighting.
+- High frequencies: rapid changes, like sharp edges, fine texture, grain, and noise.
+
+
+
 
 
 ### Convolutional Neural Network (CNN)
