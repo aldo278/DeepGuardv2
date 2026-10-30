@@ -108,13 +108,26 @@ history = model.fit(train_images, train_labels, epochs=10,
 
 
 # to evaluate the model
-
+# plt is matplotlib.pyplot, the standard plotting library for python, it is used to visualize the training process
+# history.history is a dictionary that fit filled in, with one list of values per metric, one value per epoch. So history.history["accuracy"]
+# is as list like [0.45, 0.62, ...] 10 numbers for your 10 epochs.
 plt.plot(history.history["accuracy"], label = "accuracy")
+
+# same thing for accuracy on the validation data. Its drawn on the same axis so you get two lines to compare
 plt.plot(history.history["val_accuracy"], label = "val_accuracy")
+
+# the labels
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
+
+# Sets the y-axis range from 0.5 to 1. Accuracy cant exceed 1 (100%), and cutting off the bottom at 0.5 sooms in on the interesting region
+# If values dip below 0.5 in the first epoch, they will be cut off from the plot 
 plt.ylim([0.5, 1])
+
+# Draws a legend box (the key showing which line is which, using the label s from above) in the lower right corner of the plot, where it is least likely to cover the lines 
 plt.legend(loc='lower right')
+
+plt.show()
 
 test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
 print(f"Test accuracy: {test_acc}")
