@@ -1,3 +1,8 @@
 .venv/
 cache/
 __pycache__/
+Annotation/Data/Real/*
+Annotation/Data/Fake/*
+!Annotation/Data/Real/.gitkeep
+!Annotation/Data/Fake/.gitkeep
+Annotation/Export/
