@@ -176,3 +176,8 @@ width, height, format, size_bytes, has_exif, watermark, sha256, added_at
   source `Unknown` and tag `unsure`, so it can be filtered out of training.
 - **Folder name case:** `Data/Real` vs CIFAKE's `REAL` doesn't matter on Windows, but the export
   step uses uppercase so the Detector code works on any OS.
+
+
+claude session with...
+Resume this session with:
+claude --resume da2b3c65-3449-4841-8f22-7fbb9f236377
