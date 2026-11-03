@@ -83,3 +83,7 @@ Why more than one pass? A single look at the data isn't enough for the weights t
 
 ### Claude
 I will be using Claude Code to go over my implementations, it will mainly be used as another engineer to double check my work.
+
+
+### Annotator
+I planned on using a GUI annotator so I can drop in images and label them as either fake or real. It did not work, so I deleted the folder and moved the Data subfolder into the main folder. I have also gathered some fake images that vary in size, so I need to make the model work with the different sized images. I still need to gather some real sample images.
