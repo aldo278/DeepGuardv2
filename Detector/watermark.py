@@ -1,9 +1,3 @@
-import kagglehub
-
-path = kagglehub.dataset_download("birdy654/cifake-real-and-ai-generated-synthetic-images")
-
-
-
 from imwatermark import WatermarkDecoder
 import cv2 
 import numpy as np
@@ -44,8 +38,12 @@ def watermark_precheck(img):
     return {"source": None, "verdict": "unknown"}
 
 
-import os 
-image_dir = "C:\\Users\\aantanolopez\\.cache\\kagglehub\\datasets\\birdy654\\cifake-real-and-ai-generated-synthetic-images\\versions\\3\\test\\FAKE"
-for fname in os.listdir(image_dir)[:20]:
-    result = check_sd_watermark(os.path.join(image_dir, fname))
-    print(f"{fname} -----> {result}")
+if __name__ == "__main__":
+    import os
+    import kagglehub
+
+    # demo: run the SD watermark check on a few CIFAKE fake images
+    image_dir = "C:\\Users\\aantanolopez\\.cache\\kagglehub\\datasets\\birdy654\\cifake-real-and-ai-generated-synthetic-images\\versions\\3\\test\\FAKE"
+    for fname in os.listdir(image_dir)[:20]:
+        result = check_sd_watermark(os.path.join(image_dir, fname))
+        print(f"{fname} -----> {result}")

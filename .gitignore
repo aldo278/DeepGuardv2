@@ -6,3 +6,4 @@ Annotation/Data/Fake/*
 !Annotation/Data/Real/.gitkeep
 !Annotation/Data/Fake/.gitkeep
 Annotation/Export/
+Detector/models/

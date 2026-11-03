@@ -7,6 +7,10 @@ import cv2
 # for arrays and math, numpy arrays are the same as tensors
 import numpy as np
 
+# saves and loads the trained pipeline as a single file, and times each prediction
+import joblib
+import time
+
 # path represents file paths as objects intead of plain strings
 from pathlib import Path
 
@@ -25,10 +29,13 @@ from sklearn.preprocessing import StandardScaler
 # evaluation tools, accuracy_score for fraction of predictions that were correct, classification_report for precision/recall/f1, confusion_matrix for a table of true vs predicted labels
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-# here we download the dataset from kagglehub or we use the cached copy 
-path = Path(kagglehub.dataset_download("birdy654/cifake-real-and-ai-generated-synthetic-images"))
+# downloads the dataset from kagglehub or uses the cached copy. This is a function (not a top-level line) so importing this file doesn't touch the network
+def dataset_path():
+    return Path(kagglehub.dataset_download("birdy654/cifake-real-and-ai-generated-synthetic-images"))
+
 CACHE = Path(__file__).parent / "cache"
 FEATURES = "pixels_fft" # part of the cache filename, change it whenever read_features changes
+MODEL_PATH = Path(__file__).parent / "models" / f"logreg_{FEATURES}.joblib"
 
 # an image is just a matrix of pixel values.
 # 32x32 RGB -> flatten into a 3072-length vector -> one "row" for the model.
@@ -98,7 +105,7 @@ def get_split(name):
         return np.load(cache_x), np.load(cache_y)
 
     #the cache-miss path. path/ name builds the dataset folder (like .../train) using the path variable from the top, and load_split() does the full pipeline
-    X, y = load_split(path / name)
+    X, y = load_split(dataset_path() / name)
 
     # creates the cache folder if it does not exist. 
     CACHE.mkdir(exist_ok=True)
@@ -111,45 +118,90 @@ def get_split(name):
     return X, y
 
 
-# calls the caching function from before. the first run takes a while (it extracts features and saves them), and later runs load from the disk. The result is a feature matrix 
-# and a lable array for each split
-X_train, y_train = get_split("train")
-X_test, y_test = get_split("test")
+# training lives in a function so that importing this file doesn't retrain. Run `python logisticRegression.py` to train and see the results
+def train():
+    # calls the caching function from before. the first run takes a while (it extracts features and saves them), and later runs load from the disk. The result is a feature matrix 
+    # and a lable array for each split
+    X_train, y_train = get_split("train")
+    X_test, y_test = get_split("test")
 
-print(f"train: {X_train.shape}, test: {X_test.shape}", flush=True)
+    print(f"train: {X_train.shape}, test: {X_test.shape}", flush=True)
 
-# SGDClassifier with log_loss is logistic regression trained via SGD.
-# lbfgs would need many full passes over 100k images; SGD converges in a handful of epochs. lbfgs is also scikit-learn's Logistic regression
-# SGD is sensitive to feature scale, and pixels (0-255) and FFT magnitudes live on very
-# different scales, so StandardScaler gives every feature mean 0 / std 1 first.
-# inside the pipeline the scaler only learns its mean/std from the training data.
-model = make_pipeline(
-    StandardScaler(),              # replaced from 1000   
-    SGDClassifier(loss="log_loss", max_iter=500, tol=1e-3, alpha=1e-5, average=True, random_state=42),
-)
+    # SGDClassifier with log_loss is logistic regression trained via SGD.
+    # lbfgs would need many full passes over 100k images; SGD converges in a handful of epochs. lbfgs is also scikit-learn's Logistic regression
+    # SGD is sensitive to feature scale, and pixels (0-255) and FFT magnitudes live on very
+    # different scales, so StandardScaler gives every feature mean 0 / std 1 first.
+    # inside the pipeline the scaler only learns its mean/std from the training data.
+    model = make_pipeline(
+        StandardScaler(),              # replaced from 1000   
+        SGDClassifier(loss="log_loss", max_iter=500, tol=1e-3, alpha=1e-5, average=True, random_state=42),
+    )
 
-# training runs in two stages through the pipeline: standard scaler computes the mean and sd of each of the 4096 columns on the training data, and transforms the training data with them
-model.fit(X_train, y_train)
+    # training runs in two stages through the pipeline: standard scaler computes the mean and sd of each of the 4096 columns on the training data, and transforms the training data with them
+    model.fit(X_train, y_train)
 
-# scakes the test data using the training set's mean and sd, then the classifier makes a call per image. Internally it computes the probability of fake and thresholds it at .5
-# giving it at .5 or 1
-preds = model.predict(X_test)
-# print(f"accuracy: {accuracy_score(y_test, preds):.4f}")
-# print(confusion_matrix(y_test, preds))
-# print(classification_report(y_test, preds, target_names=["REAL", "FAKE"]))
+    # scakes the test data using the training set's mean and sd, then the classifier makes a call per image. Internally it computes the probability of fake and thresholds it at .5
+    # giving it at .5 or 1
+    preds = model.predict(X_test)
+    # print(f"accuracy: {accuracy_score(y_test, preds):.4f}")
+    # print(confusion_matrix(y_test, preds))
+    # print(classification_report(y_test, preds, target_names=["REAL", "FAKE"]))
+    # saved so the server can load it instead of retraining
+    MODEL_PATH.parent.mkdir(exist_ok=True)
+    joblib.dump(model, MODEL_PATH)
+    print(f"saved model to {MODEL_PATH}", flush=True)
+    return model
 
 
-# function from claude. to test if it returns a result
-def predict_one(path):
-    img = cv2.imread(str(path))
+# same features as read_features, but from an already-loaded BGR image. Any size goes in: it is shrunk to 32x32 first because the model was trained on CIFAKE
+def features_from_bgr(img):
     img = cv2.resize(img, (32, 32), interpolation=cv2.INTER_AREA)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype(np.float32)
     spectrum = np.log1p(np.abs(np.fft.fftshift(np.fft.fft2(gray))))
-    x = np.hstack([img.flatten(), spectrum.flatten()]).astype(np.float32)
+    return np.hstack([img.flatten(), spectrum.flatten()]).astype(np.float32)
+
+
+# function from claude. to test if it returns a result
+def predict_one(path, model):
+    img = cv2.imread(str(path))
+    x = features_from_bgr(img)
     return model.predict_proba(x.reshape(1, -1))[0, 1]  # probability of fake
 
-# real image
-print(f'Real Image, probability that is fake: {predict_one("Z:\\Capstone\\DeepGuardv2\\Detector\\TestImages\\ac2b4c7e-2f69-4b49-96a1-28be8ea39a4e.jpg")}')
 
-# fake image of damian :)
-print(f'Probability of Damian fake image: {predict_one("Z:\\Capstone\\DeepGuardv2\\Detector\\TestImages\\cd9f9a60-d135-4a96-9d9f-4c59d4dde0f9.png")}')
+# the saved model is loaded once and reused for every request
+_model = None
+
+def load_model():
+    global _model
+    if _model is None:
+        if not MODEL_PATH.exists():
+            raise FileNotFoundError(f"{MODEL_PATH} not found, run `python logisticRegression.py` to train and save it")
+        _model = joblib.load(MODEL_PATH)
+    return _model
+
+
+# the shared detector interface: image file bytes in, result dict out (see PLAN.md section 4)
+def predict(image_bytes):
+    start = time.perf_counter()
+    img = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        raise ValueError("not a readable image")
+    prob_fake = float(load_model().predict_proba(features_from_bgr(img).reshape(1, -1))[0, 1])
+    h, w = img.shape[:2]
+    return {
+        "model": "logreg",
+        "verdict": "FAKE" if prob_fake >= 0.5 else "REAL",
+        "prob_fake": prob_fake,
+        "detail": f"{w}x{h} image resized to 32x32",
+        "ms": round((time.perf_counter() - start) * 1000),
+    }
+
+
+if __name__ == "__main__":
+    model = train()
+
+    # real image
+    print(f'Real Image, probability that is fake: {predict_one("Z:/Capstone/DeepGuardv2/Detector/TestImages/ac2b4c7e-2f69-4b49-96a1-28be8ea39a4e.jpg", model)}')
+
+    # fake image of damian :)
+    print(f'Probability of Damian fake image: {predict_one("Z:/Capstone/DeepGuardv2/Detector/TestImages/cd9f9a60-d135-4a96-9d9f-4c59d4dde0f9.png", model)}')
