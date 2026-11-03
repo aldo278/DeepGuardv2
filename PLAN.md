@@ -178,6 +178,8 @@ width, height, format, size_bytes, has_exif, watermark, sha256, added_at
   step uses uppercase so the Detector code works on any OS.
 
 
+The app had some restrictions so I may just place the images in the data directory with 2 subfolder, Fake, and Real manually. I have added some data to the folder, delete in lab.
+
 claude session with...
 Resume this session with:
 claude --resume da2b3c65-3449-4841-8f22-7fbb9f236377
