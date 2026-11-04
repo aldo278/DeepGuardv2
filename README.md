@@ -13,6 +13,43 @@ I will be giving updates on my progress in this file, and will be adding new sec
 ---------------------------------------------------------------------------------
 
 
+## Sandbox and Backend
+Built a local sandbox for testing the detection models. `Detector/` now acts as a backend (with FastAPI) and the sandbox page calls it over HTTP. The browser extension will call the same API later.
+
+Run it from `Detector/`: `..\.venv\Scripts\uvicorn server:app --host 127.0.0.1 --port 8000`, then open http://127.0.0.1:8000 (API docs at `/docs`).
+New dependencies: `pip install fastapi uvicorn python-multipart httpx`.
+
+### What was built
+- `watermark.py` and `logisticRegression.py` no longer download, train or run demos when imported. Training is in `train()` and demos are under `__main__`.
+- `logisticRegression.py` saves the trained model to `Detector/models/` (gitignored) and has `predict(bytes)`. Any image size is shrunk to 32x32 first, since the model was trained on CIFAKE.
+- `watermark.py` has `predict(bytes)`, which can only say FAKE (Stable Diffusion watermark found) or UNKNOWN. A missing watermark does not make an image real. The original `check_sd_watermark` decodes 32 bits, which can never contain "StableDiffusion", so the new version decodes 136 bits.
+- `registry.py` is the one place models are listed. Every model takes image bytes and returns `{model, verdict, prob_fake, detail, ms}`, so adding the CNN later is one line.
+- `server.py` routes: `GET /health`, `GET /models`, `POST /predict` (image upload, optional `models` list), `POST /evaluate` (scores everything in `Data/Real` and `Data/Fake`), and `/` serves the Sandbox.
+- `Sandbox/` (plain HTML/JS): drop, browse or paste images, see each model's verdict, probability bar and timing. Mark an image Real or Fake to get a check or cross per model and a running accuracy. The "Evaluate Data/" button shows a confusion matrix per model. UNKNOWN and ERROR results are counted as abstained, not as wrong.
+
+### Results so far
+`Data/` has 1 real and 21 fake images.
+
+| Model | Result | Time per image |
+|---|---|---|
+| watermark | UNKNOWN on every image (no Stable Diffusion watermark found) | 154 ms |
+| logreg | 20 of 22 correct (91%), but it called the one real image FAKE | 22 ms |
+
+The 91% only reflects the 21-to-1 imbalance. Logreg mostly says FAKE to everything and is often fully confident (probability 1.0), so these numbers say little until there are more real images.
+
+### Known issues
+- `watermark_precheck` calls `check_c2pa`, which does not exist yet.
+- `python logisticRegression.py` took about 11 minutes even with cached features. Its closing demo crashes because `Detector/TestImages/` is gone (the model is saved before that point).
+- I have not opened the Sandbox in a browser yet. Only the server routes and the JavaScript syntax were checked.
+
+### Next
+1. Gather more real images. Nothing can be judged until `Data/Real` has more than one.
+2. Train the CNN, save it, and add it to the registry (CIFAKE 32x32 or my own `Data/` images is still undecided).
+3. Add an `image_url` route for the extension, with limits (http/https only, size cap, timeout, no private IP ranges), and restrict CORS to the extension's origin.
+4. Handle full-size images properly. Squashing them to 32x32 is probably why logreg does so badly, so this likely means retraining on my own images or a model that takes different sizes.
+5. Build the extension itself. Video is still out of scope.
+
+
 ## Detector
 Before using a model, I decided to first check if The given image contains a hidden watermark, as this would be a good indicator of whether the image is real or fake.
 

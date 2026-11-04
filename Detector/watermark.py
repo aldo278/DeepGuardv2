@@ -1,6 +1,7 @@
 from imwatermark import WatermarkDecoder
 import cv2 
 import numpy as np
+import time
 
 # before adding any ML models, we check for a hidden watermark, if none we do LR and CNN
 
@@ -36,6 +37,33 @@ def watermark_precheck(img):
         return {"source": "sd_watermark", "verdict": "FAKE"}
 
     return {"source": None, "verdict": "unknown"}
+
+
+# the shared detector interface: image file bytes in, result dict out (see PLAN.md section 4)
+# SD hides "StableDiffusionV1" (17 bytes = 136 bits) with dwtDct. check_sd_watermark above decodes only 32 bits, which can never contain that string,
+# so this version decodes 136 bits. It can only say FAKE (watermark found) or UNKNOWN, a missing watermark doesn't make an image real.
+# c2pa isn't included yet (check_c2pa doesn't exist)
+def predict(image_bytes):
+    start = time.perf_counter()
+    img = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        raise ValueError("not a readable image")
+    h, w = img.shape[:2]
+    if h < 256 or w < 256:
+        verdict, detail = "UNKNOWN", f"{w}x{h} is too small for the watermark check (needs 256x256)"
+    else:
+        text = WatermarkDecoder("bytes", 136).decode(img, "dwtDct").decode("utf-8", errors="ignore")
+        if "StableDiffusion" in text:
+            verdict, detail = "FAKE", "Stable Diffusion watermark found"
+        else:
+            verdict, detail = "UNKNOWN", "no Stable Diffusion watermark found"
+    return {
+        "model": "watermark",
+        "verdict": verdict,
+        "prob_fake": 1.0 if verdict == "FAKE" else None,
+        "detail": detail,
+        "ms": round((time.perf_counter() - start) * 1000),
+    }
 
 
 if __name__ == "__main__":

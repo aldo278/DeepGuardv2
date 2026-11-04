@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepGuard Sandbox</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>DeepGuard Sandbox</h1>
+  <span id="status" class="pill">checking backend…</span>
+</header>
+
+<div id="offline" class="banner" hidden>Backend not reachable. Start it from <code>Detector/</code> with <code>uvicorn server:app --port 8000</code>.</div>
+
+<main>
+  <label id="drop" tabindex="0">
+    <input id="picker" type="file" accept="image/*" multiple hidden>
+    <strong>Drop images here</strong>, click to browse, or paste with Ctrl+V
+  </label>
+  <div class="evalbar"><button id="evalBtn" type="button">Evaluate Data/</button><span id="evalNote" class="note">scores every image in Data/Real and Data/Fake</span></div>
+  <div id="evalOut"></div>
+  <div id="summary" class="summary" hidden></div>
+  <div id="results"></div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
