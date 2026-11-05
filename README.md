@@ -132,3 +132,5 @@ Before improving the models, I want to have an interface to test the model. The 
 ### Results
 overfitted, model started memorizing the data, not learning
 
+Resume this session with:
+claude --resume da2b3c65-3449-4841-8f22-7fbb9f236377
