@@ -200,8 +200,7 @@ def predict(image_bytes):
 if __name__ == "__main__":
     model = train()
 
-    # real image
-    print(f'Real Image, probability that is fake: {predict_one("Z:/Capstone/DeepGuardv2/Detector/TestImages/ac2b4c7e-2f69-4b49-96a1-28be8ea39a4e.jpg", model)}')
+    # fake image
+    print(f'Fake Image, probability that is fake: {predict_one("Z:\\Capstone\\DeepGuardv2\\Data\\Fake\\8d6b8758-e650-45ad-84fc-e8b948123de2.jpeg", model)}')
 
-    # fake image of damian :)
-    print(f'Probability of Damian fake image: {predict_one("Z:/Capstone/DeepGuardv2/Detector/TestImages/cd9f9a60-d135-4a96-9d9f-4c59d4dde0f9.png", model)}')
+    print(f'Real Image, probability that is fake: {predict_one("Z:\\Capstone\\DeepGuardv2\\Data\\Real\\ac2b4c7e-2f69-4b49-96a1-28be8ea39a4e.jpg", model)}')

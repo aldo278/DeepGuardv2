@@ -10,9 +10,15 @@ def _logreg(image_bytes):
     return logisticRegression.predict(image_bytes)
 
 
+def _cnn(image_bytes):
+    import CNN
+    return CNN.predict(image_bytes)
+
+
 MODELS = {
     "watermark": _watermark,
     "logreg": _logreg,
+    "cnn": _cnn,
 }
 
 

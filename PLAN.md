@@ -9,7 +9,7 @@ extension, so the sandbox is the first client of the final product, not a throwa
   Sandbox page ->|                    |-> watermark precheck
   (Sandbox/)     |  Backend (FastAPI) |-> logistic regression
                  |  Detector/         |-> CNN
-  Extension   -> |                    |
+  Extension   -> |                    |-> ensemble learning for both models
   (later)        +--------------------+
 ```
 
@@ -20,7 +20,7 @@ extension, so the sandbox is the first client of the final product, not a throwa
 | Piece | Choice | Why |
 |---|---|---|
 | Backend | **FastAPI + uvicorn** | file uploads, JSON, auto-generated `/docs` page for poking the API, CORS is one line |
-| Sandbox UI | **Plain HTML + JS, served by the backend** | no build step; same-origin so no CORS issues while testing |
+| Sandbox UI | **Plain HTML + JS, served by the backend** | no build step; same-origin so no CORS issues while testing, easy build with Claude |
 | Model storage | **`joblib`** (sklearn) and **`.keras`** (CNN) in `Detector/models/` | train once, load at server start |
 | Transport | `multipart` image upload now; `image_url` option later for the extension | extensions usually have a URL, not a file |
 
@@ -89,7 +89,7 @@ Taking `bytes` (not a file path) matches what the API and the extension will hav
 CORS: allow `*` for local dev now; before the extension ships, restrict to the extension's origin.
 Reject files over ~10 MB and non-images with a clear 4xx message.
 
-## 6. Sandbox page
+## 6. Sandbox page, built by Claude
 
 - Drop zone / file picker / paste, multiple images.
 - Per image: thumbnail + one row per model with verdict badge, probability bar, ms, detail text.

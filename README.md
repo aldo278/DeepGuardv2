@@ -129,3 +129,6 @@ I planned on using a GUI annotator so I can drop in images and label them as eit
 Before improving the models, I want to have an interface to test the model. The final product is still a browser extension, like the first version, where you simply click on a video or image to detect if the input is fake or not. First, I am going to make a sandbox for testing.
 
 
+### Results
+overfitted, model started memorizing the data, not learning
+
