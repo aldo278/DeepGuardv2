@@ -18,7 +18,6 @@ Built a local sandbox for testing the detection models. `Detector/` now acts as 
 
 Run it from `Detector/`: `..\.venv\Scripts\uvicorn server:app --host 127.0.0.1 --port 8000`, then open http://127.0.0.1:8000 (API docs at `/docs`).
 New dependencies: `pip install fastapi uvicorn python-multipart httpx`.
-
 ### What was built
 - `watermark.py` and `logisticRegression.py` no longer download, train or run demos when imported. Training is in `train()` and demos are under `__main__`.
 - `logisticRegression.py` saves the trained model to `Detector/models/` (gitignored) and has `predict(bytes)`. Any image size is shrunk to 32x32 first, since the model was trained on CIFAKE.
@@ -130,7 +129,10 @@ Before improving the models, I want to have an interface to test the model. The 
 
 
 ### Results
-overfitted, model started memorizing the data, not learning
+overfitted, model started memorizing the data, not learning.
+I need more data, or i might use a pretrained model from hugging face
+
+The CNN now contains 10 layers 
 
 Resume this session with:
 claude --resume da2b3c65-3449-4841-8f22-7fbb9f236377

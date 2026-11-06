@@ -1,7 +1,7 @@
 # a computer vision library, used here to decode image bytes and resize them
 import cv2
 
-# arrays and math
+# arrays and math. The chached data and images are numpy arrays, which is what keras accepts directly
 import numpy as np
 
 import time
@@ -9,26 +9,43 @@ from pathlib import Path
 
 # Training uses the 32x32 CIFAKE pixels that logisticRegression.py already extracted into cache/. The first 3072 columns of each cached row are the flattened BGR pixels (32*32*3),
 # the other 1024 are the FFT features the logistic regression uses, which the CNN does not need. Labels are 1 = FAKE, 0 = REAL.
+# same lines from the logistic regression code, they point to the same cache folder so the cnn can load the npy files
 CACHE = Path(__file__).parent / "cache"
+# this part has to match the string in that file directly because it is part of the filenames
 FEATURES = "pixels_fft"
+
+# sets the file the CIFAKE trained model will be saved to, inside the models/ folder next to the script
+# .kears is the Kera's native single file format, holding the architecture, weights and the optimizer state.
 MODEL_PATH = Path(__file__).parent / "models" / "cnn.keras"
 
 # my own labeled images (full size, any size) live in DeepGuardv2/Data/Real and Data/Fake. Fine-tuning on them is saved to a separate file so the CIFAKE model is never overwritten
 DATA_DIR = Path(__file__).parent.parent / "Data"
+# first we are training on the CIFAKE dataset, then we fine-tune with the data in Data/.
 DATA_MODEL_PATH = Path(__file__).parent / "models" / "cnn_data.keras"
 
 # CIFAKE images are 32x32, so every image is resized to this before it reaches the model. Real photos are shrunk with INTER_AREA, the same kind of downscaling CIFAKE's images went through,
 # which keeps the pixel statistics close to what the model saw in training.
 SIZE = 32
 
-
+# 
 def load_pixels(name):
+    # name is "train" or "test". nmap_mode="r" is the key detail: instead of reading the whole file into RAM 
+    # np memory maps it, so the array behaves normally but pieces are read from disk only when we touch them.
     X = np.load(CACHE / f"X_{name}_{FEATURES}.npy", mmap_mode="r")
+    # lables are small, so they load normally
     y = np.load(CACHE / f"y_{name}_{FEATURES}.npy")
-    # slice in chunks so we never hold the whole 1.6 GB feature file as floats, and store the pixels as uint8 (0-255)
+    # allocates the output array up front, shape is (1000, 32, 32, 3), a 4D tensor, the dtype uint 8 stores each value in one byte (0-255). exactly the range of raw pixels
+    # so a black and white image may fail this model.
     pixels = np.empty((len(X), SIZE, SIZE, 3), dtype=np.uint8)
+
+    # now we process the data, 10,000 rows at a time
     for i in range(0, len(X), 10000):
+        # pixels[i:i + 10000] takes the next 10,000 rows which is when those rows are actually read from disk
+        # Size * size * 3 keeps only the first 32x32x3 3072 columns, the raw pixels, and drops the 1024 fft columns
+        # .reshape(-1, size, size, 3) un-flattens each 3072 long row back into a 32x32x3 image. the -1 means "figure this dimension out" 
         pixels[i:i + 10000] = X[i:i + 10000, :SIZE * SIZE * 3].reshape(-1, SIZE, SIZE, 3)
+
+    # now we can return the images and labels, ready for training, after normalization (pixels / 255)
     return pixels, y
 
 
@@ -37,26 +54,35 @@ def load_pixels(name):
 # no matter how big the map is, so the Dense layers after them always get the same number of inputs. predict() still resizes to 32x32 to match the training data, but the network itself
 # does not care about the size.
 def build_model():
+    # import here so that when we import the file, it does not load TensorFlow until we actually build the mode (for speed)
     from tensorflow.keras import layers, models
 
+    # declares the input s any height, any width, 3 channels (BGR). 
     inputs = layers.Input(shape=(None, None, 3))
     x = layers.Rescaling(1 / 255)(inputs)  # pixels 0-255 -> 0-1
 
     # two Conv2D + ReLU, then MaxPooling halves the size. Filters double each block (32 -> 64 -> 128) to find more complex patterns as the image gets smaller
+    # a loop that builds the same block twice, one with 32 filters, and one with 64. each block hass two con2D layers and one pooling layer.
     for filters in (32, 64):
         x = layers.Conv2D(filters, 3, padding="same", activation="relu")(x)
         x = layers.Conv2D(filters, 3, padding="same", activation="relu")(x)
+        # defaults to a 2x2 window, so it halves in size
         x = layers.MaxPooling2D()(x)
+
+    # one more conv2D layer with 128 filters, at the smallest size
     x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
 
     # average = "how much of this pattern is there overall", max = "is this pattern anywhere". Generated images often have local artifacts, so we keep both
     x = layers.Concatenate()([layers.GlobalAveragePooling2D()(x), layers.GlobalMaxPooling2D()(x)])
+
+    # add hidden layers to learn more complex patterns from the features. Dropout randomly switches off some units while training, which fights overfitting
     x = layers.Dense(64, activation="relu")(x)
-    x = layers.Dropout(0.3)(x)  # randomly switches off 30% of units while training, which fights overfitting
+    x = layers.Dropout(0.3)(x)
 
     # one output between 0 and 1 (sigmoid) = probability the image is FAKE
     outputs = layers.Dense(1, activation="sigmoid")(x)
 
+    # builds the model from the start and end tensors, then compiles.
     model = models.Model(inputs, outputs)
     model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
     return model
